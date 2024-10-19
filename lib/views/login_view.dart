@@ -1,7 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:learn_dart/firebase_options.dart';
+import 'package:learn_dart/exception/auth_exceptions.dart';
+import 'package:learn_dart/service/firebase_auth_provider.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key, required this.title});
@@ -36,12 +35,6 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  Future<FirebaseApp> future() async {
-    await Future.delayed(const Duration(seconds: 5), () => {});
-    return Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,19 +65,20 @@ class _LoginViewState extends State<LoginView> {
                     final email = _email.text;
                     final pass = _password.text;
                     try {
-                      var userCredential = await FirebaseAuth.instance
-                          .signInWithEmailAndPassword(
-                              email: email, password: pass);
-                      var user = userCredential.user;
-                      var emailVerified = user?.emailVerified ?? false;
-                      if (!emailVerified) {
+                      var user = await FirebaseAuthProvider.instance.loginUser(
+                        email: email,
+                        password: pass,
+                      );
+                      if (!user.emailVerified) {
+                        await FirebaseAuthProvider.instance
+                            .sendEmailVerificationLink();
                         Navigator.of(context).pushNamedAndRemoveUntil(
                             "/emailVerify", (route) => false);
                       } else {
                         Navigator.of(context)
                             .pushNamedAndRemoveUntil("/home", (route) => false);
                       }
-                    } on FirebaseAuthException catch (e) {
+                    } on GenericAuthException catch (e) {
                       toggleInvalidCredential(e.code);
                     }
                   },

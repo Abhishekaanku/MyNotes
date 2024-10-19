@@ -1,14 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:learn_dart/firebase_options.dart';
+import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:learn_dart/views/login_view.dart';
 import 'package:learn_dart/views/verify_email.dart';
 
-Future<FirebaseApp> future() async {
-  await Future.delayed(const Duration(seconds: 3), () => {});
-  return Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform);
+Future<void> future() async {
+  await Future.delayed(const Duration(seconds: 2), () => {});
+  FirebaseAuthProvider.instance.initialize();
+  var user = FirebaseAuthProvider.instance.getCurrentUser();
+  if (user != null && !user.emailVerified) {
+    await FirebaseAuthProvider.instance.sendEmailVerificationLink();
+  }
+  return;
 }
 
 enum HomeMenuAction { logOut, deRegister }
@@ -29,20 +31,20 @@ class _HomeViewState extends State<HomeView> {
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              var user = FirebaseAuth.instance.currentUser;
-              if (user?.isAnonymous ?? true) {
+              var user = FirebaseAuthProvider.instance.getCurrentUser();
+              if (user == null) {
                 return const LoginView(title: "Login");
               } else {
-                if (user != null && !user.emailVerified) {
+                if (!user.emailVerified) {
                   return const VerifyEmailView(title: "Verify Email");
                 }
               }
-              return HomeWidget(
+              return NotesView(
                 widget: widget,
                 loading: false,
               );
             default:
-              return HomeWidget(
+              return NotesView(
                 widget: widget,
                 loading: true,
               );
@@ -51,8 +53,8 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
-class HomeWidget extends StatelessWidget {
-  const HomeWidget({
+class NotesView extends StatelessWidget {
+  const NotesView({
     super.key,
     required this.widget,
     required this.loading,
@@ -72,14 +74,14 @@ class HomeWidget extends StatelessWidget {
                 case HomeMenuAction.logOut:
                   var res = await showLogOutAlert(context);
                   if (res) {
-                    await FirebaseAuth.instance.signOut();
+                    await FirebaseAuthProvider.instance.signOut();
                     Navigator.of(context)
                         .pushNamedAndRemoveUntil("/home", (_) => false);
                   }
                 case HomeMenuAction.deRegister:
                   var res = await showDeleteUserAlert(context);
                   if (res) {
-                    await FirebaseAuth.instance.currentUser?.delete();
+                    await FirebaseAuthProvider.instance.deleteCurUser();
                     Navigator.of(context)
                         .pushNamedAndRemoveUntil("/home", (_) => false);
                   }

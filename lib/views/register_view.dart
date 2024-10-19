@@ -1,7 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:learn_dart/firebase_options.dart';
+import 'package:learn_dart/exception/auth_exceptions.dart';
+import 'package:learn_dart/service/firebase_auth_provider.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key, required this.title});
@@ -36,12 +35,6 @@ class _RegisterViewState extends State<RegisterView> {
     });
   }
 
-  Future<FirebaseApp> future() async {
-    // await Future.delayed(const Duration(seconds: 5), () => {});
-    return Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,17 +66,17 @@ class _RegisterViewState extends State<RegisterView> {
                     final pass = _password.text;
                     print("$email $pass");
                     try {
-                      final userCredential = await FirebaseAuth.instance
-                          .createUserWithEmailAndPassword(
+                      await FirebaseAuthProvider.instance.registerUser(
                         email: email,
                         password: pass,
                       );
-                      print(userCredential);
+                      await FirebaseAuthProvider.instance
+                          .sendEmailVerificationLink();
                       Navigator.of(context).pushNamedAndRemoveUntil(
                         "/emailVerify",
                         (route) => false,
                       );
-                    } on FirebaseAuthException catch (e) {
+                    } on GenericAuthException catch (e) {
                       toggleEmailExist(e.code);
                     }
                   },

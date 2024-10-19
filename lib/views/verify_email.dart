@@ -1,5 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:learn_dart/exception/auth_exceptions.dart';
+import 'package:learn_dart/service/firebase_auth_provider.dart';
 
 class VerifyEmailView extends StatefulWidget {
   final String title;
@@ -28,21 +29,23 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
         body: Center(
           child: Column(
             children: [
+              const Text(
+                  "We have sent you an email verfication link. Please use that to verify your email."),
               TextButton(
                   onPressed: () async {
                     try {
-                      var user = FirebaseAuth.instance.currentUser;
-                      await user?.sendEmailVerification();
+                      await FirebaseAuthProvider.instance
+                          .sendEmailVerificationLink();
                       Navigator.of(context)
                           .pushNamedAndRemoveUntil("/login", (_) => false);
-                    } catch (e) {
-                      print("ttttt ${e.runtimeType}");
-                      setEmailVerifyError(e.toString());
+                    } on GenericAuthException catch (e) {
+                      setEmailVerifyError(e.code);
                     }
                   },
-                  child: const Text("Verify Your Email First!")),
+                  child: const Text("Not Received Yet? Resend!")),
               TextButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await FirebaseAuthProvider.instance.signOut();
                     Navigator.of(context)
                         .pushNamedAndRemoveUntil("/login", (_) => false);
                   },

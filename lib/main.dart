@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:learn_dart/views/home_view.dart';
+import 'package:learn_dart/views/notes_view.dart';
 import 'package:learn_dart/views/login_view.dart';
 import 'package:learn_dart/views/register_view.dart';
 import 'package:learn_dart/views/verify_email.dart';
