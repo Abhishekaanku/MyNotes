@@ -5,7 +5,8 @@ import 'package:learn_dart/views/verify_email.dart';
 
 Future<void> future() async {
   await Future.delayed(const Duration(seconds: 2), () => {});
-  FirebaseAuthProvider.instance.initialize();
+  await Future.sync(() => FirebaseAuthProvider.instance.initialize());
+
   var user = FirebaseAuthProvider.instance.getCurrentUser();
   if (user != null && !user.emailVerified) {
     await FirebaseAuthProvider.instance.sendEmailVerificationLink();

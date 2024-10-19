@@ -5,10 +5,13 @@ import 'package:learn_dart/firebase_options.dart';
 import 'package:learn_dart/service/auth_service.dart';
 
 class FirebaseAuthProvider implements NotesAuthProvider {
-  static final FirebaseAuthProvider _singletonInstance = FirebaseAuthProvider();
+  static FirebaseAuthProvider? _singletonInstance;
 
   static FirebaseAuthProvider get instance {
-    return _singletonInstance;
+    if (_singletonInstance == null) {
+      _singletonInstance = FirebaseAuthProvider();
+    }
+    return _singletonInstance as FirebaseAuthProvider;
   }
 
   @override
