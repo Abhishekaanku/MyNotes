@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 abstract class NotesAuthProvider {
@@ -25,8 +26,11 @@ abstract class NotesAuthProvider {
 @immutable
 class AuthUser {
   final bool emailVerified;
+  final String? email;
 
-  const AuthUser({required this.emailVerified});
+  AuthUser.firebase(User user)
+      : emailVerified = user.emailVerified,
+        email = user.email;
 
   @override
   String toString() {

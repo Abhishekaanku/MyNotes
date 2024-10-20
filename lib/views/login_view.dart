@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learn_dart/exception/auth_exceptions.dart';
+import 'package:learn_dart/service/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 
 class LoginView extends StatefulWidget {
@@ -72,11 +73,10 @@ class _LoginViewState extends State<LoginView> {
                       if (!user.emailVerified) {
                         await FirebaseAuthProvider.instance
                             .sendEmailVerificationLink();
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                            "/emailVerify", (route) => false);
+                        Navigator.of(context).pushNamed(verifyEmailRoute);
                       } else {
-                        Navigator.of(context)
-                            .pushNamedAndRemoveUntil("/home", (route) => false);
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                            homeRoute, (route) => false);
                       }
                     } on GenericAuthException catch (e) {
                       toggleInvalidCredential(e.code);
@@ -85,7 +85,7 @@ class _LoginViewState extends State<LoginView> {
                   child: const Text("Login")),
               TextButton(
                   onPressed: () => Navigator.of(context)
-                      .pushNamedAndRemoveUntil("/register", (route) => false),
+                      .pushNamedAndRemoveUntil(registerRoute, (route) => false),
                   child: const Text("Not Registered? Signup here!"))
             ],
           ),

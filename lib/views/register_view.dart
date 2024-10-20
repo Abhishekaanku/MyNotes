@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learn_dart/exception/auth_exceptions.dart';
+import 'package:learn_dart/service/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 
 class RegisterView extends StatefulWidget {
@@ -73,7 +74,7 @@ class _RegisterViewState extends State<RegisterView> {
                       await FirebaseAuthProvider.instance
                           .sendEmailVerificationLink();
                       Navigator.of(context).pushNamedAndRemoveUntil(
-                        "/emailVerify",
+                        verifyEmailRoute,
                         (route) => false,
                       );
                     } on GenericAuthException catch (e) {
@@ -84,7 +85,7 @@ class _RegisterViewState extends State<RegisterView> {
               TextButton(
                   onPressed: () {
                     Navigator.of(context).pushNamedAndRemoveUntil(
-                      "/login",
+                      loginRoute,
                       (_) => false,
                     );
                   },

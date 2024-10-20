@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:learn_dart/views/notes_view.dart';
+import 'package:learn_dart/service/constants/routes.dart';
+import 'package:learn_dart/views/notes/add_notes_view.dart';
+import 'package:learn_dart/views/notes/notes_view.dart';
 import 'package:learn_dart/views/login_view.dart';
 import 'package:learn_dart/views/register_view.dart';
 import 'package:learn_dart/views/verify_email.dart';
@@ -22,11 +24,14 @@ class MyApp extends StatelessWidget {
       ),
       home: const HomeView(title: 'Home Screen'),
       routes: {
-        "/home": (context) => const HomeView(title: "Home"),
-        "/login": (context) => const LoginView(title: "Login"),
-        "/register": (context) => const RegisterView(title: "Register"),
-        "/emailVerify": (context) =>
+        homeRoute: (context) => const HomeView(title: "Home"),
+        loginRoute: (context) => const LoginView(title: "Login"),
+        registerRoute: (context) => const RegisterView(title: "Register"),
+        verifyEmailRoute: (context) =>
             const VerifyEmailView(title: "Verify Email"),
+        addNotesRoute: (context) => const AddNotesView(
+              title: "Add Notes",
+            ),
       },
     );
   }

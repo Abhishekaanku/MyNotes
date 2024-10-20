@@ -4,6 +4,7 @@ const userEmailColumn = "email";
 const notedIdColumn = "id";
 const textColumn = "text";
 const isSyncedWithCloudColumn = "is_synced_woth_cloud";
+const notesUserIdColumn = "user_id";
 
 const userTable = "user";
 const notesTable = "user_notes";

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learn_dart/exception/auth_exceptions.dart';
+import 'package:learn_dart/service/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 
 class VerifyEmailView extends StatefulWidget {
@@ -37,7 +38,7 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
                       await FirebaseAuthProvider.instance
                           .sendEmailVerificationLink();
                       Navigator.of(context)
-                          .pushNamedAndRemoveUntil("/login", (_) => false);
+                          .pushNamedAndRemoveUntil(loginRoute, (_) => false);
                     } on GenericAuthException catch (e) {
                       setEmailVerifyError(e.code);
                     }
@@ -47,7 +48,7 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
                   onPressed: () async {
                     await FirebaseAuthProvider.instance.signOut();
                     Navigator.of(context)
-                        .pushNamedAndRemoveUntil("/login", (_) => false);
+                        .pushNamedAndRemoveUntil(loginRoute, (_) => false);
                   },
                   child: const Text("Login with different ID")),
               Text(emailVerifyError),

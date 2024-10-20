@@ -11,7 +11,7 @@ class FirebaseAuthProvider implements NotesAuthProvider {
     if (_singletonInstance == null) {
       _singletonInstance = FirebaseAuthProvider();
     }
-    return _singletonInstance as FirebaseAuthProvider;
+    return _singletonInstance!;
   }
 
   @override
@@ -29,8 +29,7 @@ class FirebaseAuthProvider implements NotesAuthProvider {
       if (userCredential.user == null) {
         throw UserNotLoggedInException();
       }
-      return AuthUser(
-          emailVerified: userCredential.user?.emailVerified ?? false);
+      return AuthUser.firebase(userCredential.user!);
     } on FirebaseAuthException catch (e) {
       throw GenericAuthException(code: e.code);
     } on UserNotLoggedInException {
@@ -49,8 +48,7 @@ class FirebaseAuthProvider implements NotesAuthProvider {
       if (userCredential.user == null) {
         throw UserNotLoggedInException();
       }
-      return AuthUser(
-          emailVerified: userCredential.user?.emailVerified ?? false);
+      return AuthUser.firebase(userCredential.user!);
     } on FirebaseAuthException catch (e) {
       throw GenericAuthException(code: e.code);
     } on UserNotLoggedInException {
@@ -88,11 +86,11 @@ class FirebaseAuthProvider implements NotesAuthProvider {
 
   @override
   AuthUser? getCurrentUser() {
-    var cred = FirebaseAuth.instance.currentUser;
-    if (cred == null) {
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       return null;
     }
-    return AuthUser(emailVerified: cred.emailVerified);
+    return AuthUser.firebase(user);
   }
 
   @override
