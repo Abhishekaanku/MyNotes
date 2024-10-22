@@ -9,7 +9,7 @@ const notesUserIdColumn = "user_id";
 const userTable = "user";
 const notesTable = "user_notes";
 
-const createUserTable = """CREATE TABLE IF NOT EXISTS A"user" (
+const createUserTable = """CREATE TABLE IF NOT EXISTS "user" (
 	"id"	INTEGER NOT NULL,
 	"email"	TEXT UNIQUE,
 	PRIMARY KEY("id" AUTOINCREMENT)

@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:learn_dart/exception/db_exception.dart';
+import 'package:learn_dart/service/auth_service.dart';
 import 'package:learn_dart/service/constants/db_constants.dart';
+import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -9,18 +11,25 @@ import 'package:sqflite/sqflite.dart';
 class NotesService {
   Database? _db;
   final List<DbNote> _cachedNotes = [];
-  final controller = StreamController<List<DbNote>>.broadcast();
+  late final StreamController<List<DbNote>> controller;
 
-  static final NotesService _notesService = NotesService._singleTone();
+  static final NotesService _notesService = NotesService._singletone();
 
-  NotesService._singleTone();
+  NotesService._singletone() {
+    controller = StreamController<List<DbNote>>.broadcast(
+      onListen: () async {
+        await _cacheAllNotes();
+        controller.sink.add(_cachedNotes);
+      },
+    );
+  }
 
   factory NotesService() => _notesService;
 
   Future<void> _cacheAllNotes() async {
-    var allNotes = await getAllNotes();
+    var allNotes = await getAllNotesForCurrentUser();
+    _cachedNotes.clear();
     _cachedNotes.addAll(allNotes);
-    controller.add(_cachedNotes);
   }
 
   Stream<List<DbNote>> get noteStream => controller.stream;
@@ -67,17 +76,23 @@ class NotesService {
   }
 
   Future<DbUser> getOrCreateUser(String email) async {
-    var user = await getUserByEmail(email: email);
-    user ??= await createUser(email);
-    return user;
+    try {
+      var user = await getUserByEmail(email: email);
+      return user;
+    } on UserNotFoundException {
+      var user = await createUser(email);
+      return user;
+    }
   }
 
   Future<DbUser> createUser(String email) async {
     var db = await _getDb();
-    var user = await getUserByEmail(email: email);
-    if (user != null) {
+    try {
+      await getUserByEmail(email: email);
       throw UserAlreadyExistsException();
-    }
+      // ignore: empty_catches
+    } on UserNotFoundException {}
+
     email = email.toLowerCase();
     var id = await db.insert(userTable, {
       userEmailColumn: email,
@@ -99,7 +114,7 @@ class NotesService {
     return DbUser.fromRow(row.first);
   }
 
-  Future<DbUser?> getUserByEmail({required String email}) async {
+  Future<DbUser> getUserByEmail({required String email}) async {
     email = email.toLowerCase();
     var db = await _getDb();
     var row = await db.query(
@@ -108,8 +123,9 @@ class NotesService {
       limit: 1,
       whereArgs: [email],
     );
+
     if (row.isEmpty) {
-      return null;
+      throw UserNotFoundException();
     }
     return DbUser.fromRow(row.first);
   }
@@ -142,6 +158,26 @@ class NotesService {
       where: "id=?",
       whereArgs: [id],
     );
+  }
+
+  Future<Iterable<DbNote>> getAllNotesForCurrentUser() async {
+    var user = FirebaseAuthProvider.instance.getCurrentUser();
+    if (user == null) {
+      return [];
+    }
+    var dbUser = await getUserByEmail(email: user.email!);
+
+    var db = await _getDb();
+    var rows = await db.query(
+      notesTable,
+      where: "user_id=?",
+      whereArgs: [dbUser.userId],
+    );
+
+    var res = rows.map(
+      (row) => DbNote.fromRow(row),
+    );
+    return res;
   }
 
   Future<Iterable<DbNote>> getAllNotes() async {
@@ -187,9 +223,10 @@ class NotesService {
     return dbNote;
   }
 
-  Future<DbNote> updateNote(int notesId, String text) async {
-    var userNote = await getNote(notesId);
-    if (userNote == null) {
+  Future<DbNote> updateNote(DbNote dbNoteToUpdate, String text) async {
+    var notesId = dbNoteToUpdate.notesId;
+    var dbNote = await getNote(notesId);
+    if (dbNote == null) {
       throw NotesNotFoundException();
     }
     var db = await _getDb();
@@ -200,17 +237,15 @@ class NotesService {
         },
         where: "id=?",
         whereArgs: [notesId]);
-    var dbNote = await getNote(notesId);
+    dbNote = await getNote(notesId);
     _cachedNotes.removeWhere((note) => note.notesId == notesId);
+    _cachedNotes.add(dbNote!);
     controller.add(_cachedNotes);
-    return dbNote!;
+    return dbNote;
   }
 
-  Future<void> deleteNote(int notesId) async {
-    var userNote = await getNote(notesId);
-    if (userNote == null) {
-      throw NotesNotFoundException();
-    }
+  Future<void> deleteNote(DbNote dbNote) async {
+    var notesId = dbNote.notesId;
     var db = await _getDb();
     await db.delete(
       notesTable,
@@ -218,6 +253,27 @@ class NotesService {
       whereArgs: [notesId],
     );
     _cachedNotes.removeWhere((note) => note.notesId == notesId);
+    controller.add(_cachedNotes);
+  }
+
+  Future<void> deleteNotesForUser(AuthUser authUser) async {
+    var user = await getUserByEmail(email: authUser.email!);
+    var db = await _getDb();
+    await db.delete(
+      notesTable,
+      where: "user_id=?",
+      whereArgs: [user.userId],
+    );
+    _cachedNotes.removeWhere((note) => note.userId == user.userId);
+    controller.add(_cachedNotes);
+  }
+
+  Future<void> deleteAllNote() async {
+    var db = await _getDb();
+    await db.delete(
+      notesTable,
+    );
+    _cachedNotes.clear();
     controller.add(_cachedNotes);
   }
 }

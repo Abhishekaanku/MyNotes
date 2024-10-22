@@ -34,6 +34,6 @@ class AuthUser {
 
   @override
   String toString() {
-    return "EmailVerfified: $emailVerified";
+    return "Email: $email, EmailVerfified: $emailVerified";
   }
 }

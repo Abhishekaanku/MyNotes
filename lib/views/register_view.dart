@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learn_dart/exception/auth_exceptions.dart';
 import 'package:learn_dart/service/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
+import 'package:learn_dart/util/alert_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key, required this.title});
@@ -14,7 +15,6 @@ class RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<RegisterView> {
   late final TextEditingController _email;
   late final TextEditingController _password;
-  String emailAlreadyExist = "";
 
   @override
   void initState() {
@@ -28,12 +28,6 @@ class _RegisterViewState extends State<RegisterView> {
     _email.dispose();
     _password.dispose();
     super.dispose();
-  }
-
-  void toggleEmailExist(String text) {
-    setState(() {
-      emailAlreadyExist = text;
-    });
   }
 
   @override
@@ -60,7 +54,6 @@ class _RegisterViewState extends State<RegisterView> {
                 autocorrect: false,
                 enableSuggestions: false,
               ),
-              Text(emailAlreadyExist),
               TextButton(
                   onPressed: () async {
                     final email = _email.text;
@@ -78,7 +71,10 @@ class _RegisterViewState extends State<RegisterView> {
                         (route) => false,
                       );
                     } on GenericAuthException catch (e) {
-                      toggleEmailExist(e.code);
+                      errorDialog(
+                          context: context,
+                          title: "Registration Error",
+                          content: e.code);
                     }
                   },
                   child: const Text("Register")),

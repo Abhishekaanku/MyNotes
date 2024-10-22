@@ -1,4 +1,4 @@
-var homeRoute = "/home";
+var notesRoute = "/notes";
 var loginRoute = "/login";
 var registerRoute = "/register";
 var verifyEmailRoute = "/emailVerify";

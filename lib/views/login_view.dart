@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learn_dart/exception/auth_exceptions.dart';
 import 'package:learn_dart/service/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
+import 'package:learn_dart/util/alert_dialog.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key, required this.title});
@@ -14,13 +15,6 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   late final TextEditingController _email;
   late final TextEditingController _password;
-  String invalidCredential = "";
-
-  void toggleInvalidCredential(String text) {
-    setState(() {
-      invalidCredential = text;
-    });
-  }
 
   @override
   void initState() {
@@ -60,7 +54,6 @@ class _LoginViewState extends State<LoginView> {
                 autocorrect: false,
                 enableSuggestions: false,
               ),
-              Text(invalidCredential),
               TextButton(
                   onPressed: () async {
                     final email = _email.text;
@@ -76,10 +69,13 @@ class _LoginViewState extends State<LoginView> {
                         Navigator.of(context).pushNamed(verifyEmailRoute);
                       } else {
                         Navigator.of(context).pushNamedAndRemoveUntil(
-                            homeRoute, (route) => false);
+                            notesRoute, (route) => false);
                       }
                     } on GenericAuthException catch (e) {
-                      toggleInvalidCredential(e.code);
+                      errorDialog(
+                          context: context,
+                          title: "Login Error",
+                          content: e.code);
                     }
                   },
                   child: const Text("Login")),
