@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:learn_dart/exception/db_exception.dart';
 import 'package:learn_dart/service/auth_service.dart';
-import 'package:learn_dart/service/constants/db_constants.dart';
+import 'package:learn_dart/constants/db_constants.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
@@ -165,7 +165,7 @@ class NotesService {
     if (user == null) {
       return [];
     }
-    var dbUser = await getUserByEmail(email: user.email!);
+    var dbUser = await getUserByEmail(email: user.email);
 
     var db = await _getDb();
     var rows = await db.query(
@@ -257,7 +257,7 @@ class NotesService {
   }
 
   Future<void> deleteNotesForUser(AuthUser authUser) async {
-    var user = await getUserByEmail(email: authUser.email!);
+    var user = await getUserByEmail(email: authUser.email);
     var db = await _getDb();
     await db.delete(
       notesTable,

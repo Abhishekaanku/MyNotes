@@ -25,15 +25,17 @@ abstract class NotesAuthProvider {
 
 @immutable
 class AuthUser {
+  final String userId;
   final bool emailVerified;
-  final String? email;
+  final String email;
 
   AuthUser.firebase(User user)
       : emailVerified = user.emailVerified,
-        email = user.email;
+        email = user.email!,
+        userId = user.uid;
 
   @override
   String toString() {
-    return "Email: $email, EmailVerfified: $emailVerified";
+    return "UserId: $userId, Email: $email, EmailVerfified: $emailVerified";
   }
 }

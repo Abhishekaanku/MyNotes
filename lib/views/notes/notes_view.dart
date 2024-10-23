@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:learn_dart/service/constants/routes.dart';
-import 'package:learn_dart/service/crud/notes_repository.dart';
+import 'package:learn_dart/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
+import 'package:learn_dart/service/firestore/notes_firestore.dart';
 import 'package:learn_dart/util/alert_dialog.dart';
 import 'package:learn_dart/views/notes/notes_list_item.dart';
 
@@ -38,15 +38,19 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> {
-  late final NotesService notesService;
+  late final CloudStoreService _cloudStoreService;
 
   String get userEmail {
-    return FirebaseAuthProvider.instance.getCurrentUser()!.email!;
+    return FirebaseAuthProvider.instance.getCurrentUser()!.email;
+  }
+
+  String get userId {
+    return FirebaseAuthProvider.instance.getCurrentUser()!.userId;
   }
 
   @override
   void initState() {
-    notesService = NotesService();
+    _cloudStoreService = CloudStoreService();
     super.initState();
   }
 
@@ -81,7 +85,7 @@ class _NotesViewState extends State<NotesView> {
                       content: "Are you sure you want to DeRegister?",
                     );
                     if (res) {
-                      await notesService.deleteNotesForUser(
+                      _cloudStoreService.deleteNotesForUser(
                         FirebaseAuthProvider.instance.getCurrentUser()!,
                       );
                       await FirebaseAuthProvider.instance.deleteCurUser();
@@ -113,26 +117,26 @@ class _NotesViewState extends State<NotesView> {
             ],
             backgroundColor: Theme.of(context).primaryColor),
         body: FutureBuilder(
-          future: notesService.getOrCreateUser(userEmail),
+          future: _cloudStoreService.getOrCreateUser(),
           builder: (context, snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.done:
                 return StreamBuilder(
-                  stream: notesService.noteStream,
+                  stream: _cloudStoreService.userNotes(userId),
                   builder: (context, snapshot) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.waiting:
                         return const Text("Your notes are loading...");
                       case ConnectionState.active:
-                        final dbNotes = snapshot.data!;
-                        if (dbNotes.isEmpty) {
+                        final cloudNote = snapshot.data;
+                        if (cloudNote == null || cloudNote.isEmpty) {
                           return const Text(
                               "Your Notes are empty!! Press + to add..");
                         }
                         return NotesListView(
-                          notes: dbNotes,
+                          notes: cloudNote.toList(),
                           onDelete: (note) async =>
-                              await notesService.deleteNote(note),
+                              await _cloudStoreService.deleteNote(note.notesId),
                           onTap: (note) {
                             Navigator.of(context)
                                 .pushNamed(addNotesRoute, arguments: note);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learn_dart/extension/route_context.dart';
-import 'package:learn_dart/service/crud/notes_repository.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
+import 'package:learn_dart/service/firestore/notes_firestore.dart';
 
 class AddNotesView extends StatefulWidget {
   final String title;
@@ -12,14 +12,14 @@ class AddNotesView extends StatefulWidget {
 }
 
 class _AddNotesViewState extends State<AddNotesView> {
-  late final NotesService _notesService;
+  late final CloudStoreService _cloudStoreService;
   late final TextEditingController _notesController;
-  DbNote? _dbNote;
+  CloudNote? _cloudNote;
 
   @override
   void initState() {
     super.initState();
-    _notesService = NotesService();
+    _cloudStoreService = CloudStoreService();
     _notesController = TextEditingController();
   }
 
@@ -37,34 +37,35 @@ class _AddNotesViewState extends State<AddNotesView> {
     _notesController.addListener(_controllerListener);
   }
 
-  Future<DbNote> _createNote(BuildContext context) async {
+  Future<CloudNote> _createNote(BuildContext context) async {
     var note = context.getArguments();
-    if (note != null && note is DbNote) {
-      _dbNote = note;
+    if (note != null && note is CloudNote) {
+      _cloudNote = note;
       _notesController.text = note.text;
       return note;
     }
     var user = FirebaseAuthProvider.instance.getCurrentUser();
-    var dbUser = await _notesService.getUserByEmail(email: user!.email!);
 
-    var dbNote = await _notesService.createNotes("", dbUser.userId);
-    _dbNote = dbNote;
-    return dbNote;
+    var cloudNote = await _cloudStoreService.createNotes(user!);
+    _cloudNote = cloudNote;
+
+    return cloudNote;
   }
 
   void _cleanUpOnExit() async {
     var text = _notesController.text;
-    if (_dbNote != null && text.isEmpty) {
-      await _notesService.deleteNote(_dbNote!);
-      _dbNote = null;
+    if (_cloudNote != null && text.isEmpty) {
+      await _cloudStoreService.deleteNote(_cloudNote!.notesId);
+      _cloudNote = null;
     }
   }
 
   void _controllerListener() async {
     var text = _notesController.text;
-    if (text.isNotEmpty && _dbNote != null) {
-      var dbNote = await _notesService.updateNote(_dbNote!, text);
-      _dbNote = dbNote;
+    if (text.isNotEmpty && _cloudNote != null) {
+      var dbNote =
+          await _cloudStoreService.updateNote(_cloudNote!.notesId, text);
+      _cloudNote = dbNote;
     }
   }
 

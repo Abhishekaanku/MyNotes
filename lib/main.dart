@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:learn_dart/service/constants/routes.dart';
+import 'package:learn_dart/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:learn_dart/views/notes/create_update_notes.dart';
 import 'package:learn_dart/views/notes/notes_view.dart';
