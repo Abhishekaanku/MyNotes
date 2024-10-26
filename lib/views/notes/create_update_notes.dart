@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learn_dart/extension/route_context.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:learn_dart/service/firestore/notes_firestore.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AddNotesView extends StatefulWidget {
   final String title;
@@ -75,6 +76,16 @@ class _AddNotesViewState extends State<AddNotesView> {
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: Theme.of(context).primaryColor,
+        actions: [
+          IconButton(
+            onPressed: () {
+              if (_cloudNote != null) {
+                Share.share(_cloudNote!.text);
+              }
+            },
+            icon: const Icon(Icons.share),
+          )
+        ],
       ),
       body: FutureBuilder(
         future: _createNote(context),

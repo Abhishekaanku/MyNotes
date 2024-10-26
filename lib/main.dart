@@ -1,4 +1,6 @@
+import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:learn_dart/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:learn_dart/views/notes/create_update_notes.dart';
@@ -34,6 +36,12 @@ class MyApp extends StatelessWidget {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
               late final Widget homeWidget;
+              if (1 == 1) {
+                return AppWidget(
+                    homeWidget: HomeView(
+                  title: "Testing",
+                ));
+              }
               var user = FirebaseAuthProvider.instance.getCurrentUser();
               if (user == null) {
                 homeWidget = const LoginView(title: "Login");
@@ -75,6 +83,142 @@ class AppWidget extends StatelessWidget {
         addNotesRoute: (context) => const AddNotesView(
               title: "Add Notes",
             ),
+      },
+    );
+  }
+}
+
+class HomeView extends StatefulWidget {
+  final String title;
+  const HomeView({super.key, required this.title});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => CounterBloc(),
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).primaryColor,
+          title: Text(widget.title),
+        ),
+        body: BlocConsumer<CounterBloc, CounterState>(
+          builder: (context, state) {
+            final invalidVal =
+                state is CounterStateInvalid ? state.invalidVal : "";
+            return Column(
+              children: [
+                Text("Your current state is ${state.value}"),
+                Visibility(
+                  visible: state is CounterStateInvalid,
+                  child: Text("Invalid Value => $invalidVal"),
+                ),
+                TextField(
+                  decoration: InputDecoration(hintText: "Please input value"),
+                  controller: _controller,
+                  keyboardType: TextInputType.number,
+                ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        BlocProvider.of<CounterBloc>(context).add(
+                            CounterEventIncrement(value: _controller.text));
+                      },
+                      child: Text("Plus"),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        context.read<CounterBloc>().add(
+                            CounterEventDecrement(value: _controller.text));
+                      },
+                      child: Text("Minus"),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+          listener: (context, state) => _controller.clear(),
+        ),
+      ),
+    );
+  }
+}
+
+abstract class CounterEvent {
+  final String value;
+
+  CounterEvent({required this.value});
+}
+
+class CounterEventIncrement extends CounterEvent {
+  CounterEventIncrement({required super.value});
+}
+
+class CounterEventDecrement extends CounterEvent {
+  CounterEventDecrement({required super.value});
+}
+
+abstract class CounterState {
+  final int value;
+
+  CounterState({required this.value});
+}
+
+class CounterStateValid extends CounterState {
+  CounterStateValid({required super.value});
+}
+
+class CounterStateInvalid extends CounterState {
+  final String invalidVal;
+  CounterStateInvalid({required int previous, required this.invalidVal})
+      : super(value: previous);
+}
+
+class CounterBloc extends Bloc<CounterEvent, CounterState> {
+  CounterBloc() : super(CounterStateValid(value: 0)) {
+    on<CounterEventIncrement>(
+      (event, emit) {
+        String val = event.value;
+        int? x = int.tryParse(val);
+        if (x != null) {
+          emit.call(CounterStateValid(value: state.value + x));
+        } else {
+          emit.call(
+              CounterStateInvalid(previous: state.value, invalidVal: val));
+        }
+      },
+    );
+
+    on<CounterEventDecrement>(
+      (event, emit) {
+        String val = event.value;
+        int? parsedValue = int.tryParse(val);
+        if (parsedValue != null) {
+          emit.call(CounterStateValid(value: state.value - parsedValue));
+        } else {
+          emit.call(
+              CounterStateInvalid(previous: state.value, invalidVal: val));
+        }
       },
     );
   }
