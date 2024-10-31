@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:learn_dart/exception/auth_exceptions.dart';
-import 'package:learn_dart/constants/routes.dart';
-import 'package:learn_dart/service/firebase_auth_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:learn_dart/bloc/auth_bloc.dart';
+import 'package:learn_dart/bloc/auth_bloc_event.dart';
 
 class VerifyEmailView extends StatefulWidget {
   final String title;
@@ -33,24 +33,15 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
               const Text(
                   "We have sent you an email verfication link. Please use that to verify your email."),
               TextButton(
-                  onPressed: () async {
-                    try {
-                      await FirebaseAuthProvider.instance
-                          .sendEmailVerificationLink();
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil(loginRoute, (_) => false);
-                    } on GenericAuthException catch (e) {
-                      setEmailVerifyError(e.code);
-                    }
+                  onPressed: () {
+                    context.read<AuthBloc>().add(AuthBlocEventUserSendEmail());
                   },
                   child: const Text("Not Received Yet? Resend!")),
               TextButton(
-                  onPressed: () async {
-                    await FirebaseAuthProvider.instance.signOut();
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil(loginRoute, (_) => false);
+                  onPressed: () {
+                    context.read<AuthBloc>().add(AuthBlocEventUserLogout());
                   },
-                  child: const Text("Login with different ID")),
+                  child: const Text("Verified? Login Here..")),
               Text(emailVerifyError),
             ],
           ),

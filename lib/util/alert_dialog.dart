@@ -58,3 +58,26 @@ Future<bool> yesNoDialog({
     (value) => value ?? false,
   );
 }
+
+void Function() showProgressDialog({
+  required BuildContext context,
+  required String content,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(
+            height: 10,
+          ),
+          Text(content),
+        ],
+      ),
+    ),
+    barrierDismissible: false,
+  );
+  return () => Navigator.of(context).pop();
+}

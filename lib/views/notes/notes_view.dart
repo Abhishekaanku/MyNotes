@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:learn_dart/bloc/auth_bloc.dart';
+import 'package:learn_dart/bloc/auth_bloc_event.dart';
 import 'package:learn_dart/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:learn_dart/service/firestore/notes_firestore.dart';
@@ -74,9 +77,7 @@ class _NotesViewState extends State<NotesView> {
                       content: "Are you sure you want to Logout?",
                     );
                     if (res) {
-                      await FirebaseAuthProvider.instance.signOut();
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil(loginRoute, (_) => false);
+                      context.read<AuthBloc>().add(AuthBlocEventUserLogout());
                     }
                   case NotesMenuAction.deRegister:
                     var res = await yesNoDialog(
@@ -85,12 +86,7 @@ class _NotesViewState extends State<NotesView> {
                       content: "Are you sure you want to DeRegister?",
                     );
                     if (res) {
-                      _cloudStoreService.deleteNotesForUser(
-                        FirebaseAuthProvider.instance.getCurrentUser()!,
-                      );
-                      await FirebaseAuthProvider.instance.deleteCurUser();
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil(loginRoute, (_) => false);
+                      context.read<AuthBloc>().add(AuthBlocEventUserDelete());
                     }
                   case NotesMenuAction.profile:
                     await errorDialog(

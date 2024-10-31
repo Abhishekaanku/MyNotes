@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:learn_dart/bloc/auth_bloc.dart';
+import 'package:learn_dart/bloc/auth_bloc_event.dart';
+import 'package:learn_dart/bloc/auth_bloc_state.dart';
 import 'package:learn_dart/exception/auth_exceptions.dart';
-import 'package:learn_dart/constants/routes.dart';
-import 'package:learn_dart/service/firebase_auth_provider.dart';
 import 'package:learn_dart/util/alert_dialog.dart';
 
 class LoginView extends StatefulWidget {
@@ -15,6 +17,7 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   late final TextEditingController _email;
   late final TextEditingController _password;
+  void Function()? _loginProgressInd;
 
   @override
   void initState() {
@@ -32,59 +35,80 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
-        ),
-        body: Center(
-          child: Column(
-            children: [
-              TextField(
-                decoration: const InputDecoration(hintText: "Enter Email"),
-                keyboardType: TextInputType.emailAddress,
-                controller: _email,
-                autocorrect: false,
-                enableSuggestions: false,
-              ),
-              TextField(
-                decoration: const InputDecoration(hintText: "Enter Password"),
-                controller: _password,
-                obscureText: true,
-                autocorrect: false,
-                enableSuggestions: false,
-              ),
-              TextButton(
-                  onPressed: () async {
-                    final email = _email.text;
-                    final pass = _password.text;
-                    try {
-                      var user = await FirebaseAuthProvider.instance.loginUser(
-                        email: email,
-                        password: pass,
-                      );
-                      if (!user.emailVerified) {
-                        await FirebaseAuthProvider.instance
-                            .sendEmailVerificationLink();
-                        Navigator.of(context).pushNamed(verifyEmailRoute);
-                      } else {
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                            notesRoute, (route) => false);
-                      }
-                    } on GenericAuthException catch (e) {
-                      errorDialog(
-                          context: context,
-                          title: "Login Error",
-                          content: e.code);
-                    }
-                  },
-                  child: const Text("Login")),
-              TextButton(
-                  onPressed: () => Navigator.of(context)
-                      .pushNamedAndRemoveUntil(registerRoute, (route) => false),
-                  child: const Text("Not Registered? Signup here!"))
-            ],
+    return BlocListener<AuthBloc, AuthBlocState>(
+      listener: (context, state) async {
+        if (state is AuthBlocStateUserLoggedOut) {
+          if (state.isLoading) {
+            final loginProgressInd =
+                showProgressDialog(context: context, content: "Logging..");
+            _loginProgressInd = loginProgressInd;
+          } else {
+            if (_loginProgressInd != null) {
+              _loginProgressInd!();
+            }
+            _loginProgressInd = null;
+          }
+          if (state.exception != null) {
+            if (_loginProgressInd != null) {
+              _loginProgressInd!();
+              _loginProgressInd = null;
+            }
+            late final String errorMsg;
+            if (state.exception is GenericAuthException) {
+              errorMsg = (state.exception as GenericAuthException).code;
+            } else if (state.exception is UserNotLoggedInException) {
+              errorMsg = (state.exception as GenericAuthException).code;
+            } else {
+              errorMsg = state.exception.toString();
+            }
+            await errorDialog(
+              context: context,
+              title: "Login Error",
+              content: errorMsg,
+            );
+          }
+        }
+      },
+      child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            title: Text(widget.title),
           ),
-        ));
+          body: Center(
+            child: Column(
+              children: [
+                TextField(
+                  decoration: const InputDecoration(hintText: "Enter Email"),
+                  keyboardType: TextInputType.emailAddress,
+                  controller: _email,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                ),
+                TextField(
+                  decoration: const InputDecoration(hintText: "Enter Password"),
+                  controller: _password,
+                  obscureText: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                ),
+                TextButton(
+                    onPressed: () async {
+                      final email = _email.text;
+                      final pass = _password.text;
+                      context.read<AuthBloc>().add(AuthBlocEventUserLogin(
+                            email: email,
+                            password: pass,
+                          ));
+                    },
+                    child: const Text("Login")),
+                TextButton(
+                    onPressed: () => context
+                        .read<AuthBloc>()
+                        .add(AuthBlocEventUserRegistering()),
+                    child: const Text("Not Registered? Signup here!"))
+              ],
+            ),
+          )),
+    );
   }
 }
