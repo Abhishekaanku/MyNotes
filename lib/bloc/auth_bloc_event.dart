@@ -39,3 +39,12 @@ class AuthBlocEventUserDelete extends AuthBlocEvent {
 class AuthBlocEventUserRegistering extends AuthBlocEvent {
   const AuthBlocEventUserRegistering();
 }
+
+class AuthBlocEventOpenPasswordReset extends AuthBlocEvent {
+  const AuthBlocEventOpenPasswordReset();
+}
+
+class AuthBlocEventSendPasswordReset extends AuthBlocEvent {
+  final String email;
+  const AuthBlocEventSendPasswordReset({required this.email});
+}

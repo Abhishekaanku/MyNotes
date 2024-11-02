@@ -5,9 +5,11 @@ import 'package:learn_dart/bloc/auth_bloc_event.dart';
 import 'package:learn_dart/bloc/auth_bloc_state.dart';
 import 'package:learn_dart/constants/routes.dart';
 import 'package:learn_dart/service/firebase_auth_provider.dart';
+import 'package:learn_dart/util/progress_view.dart';
 import 'package:learn_dart/views/notes/create_update_notes.dart';
 import 'package:learn_dart/views/notes/notes_view.dart';
 import 'package:learn_dart/views/login_view.dart';
+import 'package:learn_dart/views/password_reset_view.dart';
 import 'package:learn_dart/views/register_view.dart';
 import 'package:learn_dart/views/verify_email.dart';
 
@@ -31,7 +33,6 @@ class MyApp extends StatelessWidget {
       ),
       home: const MyHomeView(),
       routes: {
-        notesRoute: (context) => const NotesView(title: "Notes"),
         loginRoute: (context) => const LoginView(title: "Login"),
         registerRoute: (context) => const RegisterView(title: "Register"),
         verifyEmailRoute: (context) =>
@@ -55,16 +56,31 @@ class MyHomeView extends StatelessWidget {
         authBloc.add(AuthBlocEventAuthInitialise());
         return authBloc;
       },
-      child: BlocBuilder<AuthBloc, AuthBlocState>(
+      child: BlocConsumer<AuthBloc, AuthBlocState>(
+        listener: (context, state) {
+          if (state.isLoading) {
+            LoaderView().showLoadingView(
+              context: context,
+              content: state.loadingContent,
+            );
+          } else {
+            LoaderView().hideLoadingView();
+          }
+        },
         builder: (context, state) {
           if (state is AuthBlocStateUserLoggedOut) {
             return const LoginView(title: "Login");
           } else if (state is AuthBlocStateUserNeedEmailVerify) {
             return const VerifyEmailView(title: "Verify Email");
           } else if (state is AuthBlocStateUserLoggedIn) {
-            return const NotesView(title: "Notes");
+            return NotesView(
+              title: "Notes",
+              authUser: state.authUser,
+            );
           } else if (state is AuthBlocStateUserRegistring) {
             return const RegisterView(title: "Register");
+          } else if (state is AuthBlocStateUserPasswordReset) {
+            return const PasswordResetView();
           } else {
             return const NotesLoadingView();
           }

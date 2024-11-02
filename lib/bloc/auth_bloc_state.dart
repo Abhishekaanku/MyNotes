@@ -3,35 +3,53 @@ import 'package:learn_dart/service/auth_service.dart';
 
 @immutable
 abstract class AuthBlocState {
-  const AuthBlocState();
+  final bool isLoading;
+  final String loadingContent;
+  const AuthBlocState(
+      {required this.isLoading, this.loadingContent = "Please wait a while!!"});
 }
 
 class AuthBlocStateAuthInitialising extends AuthBlocState {
-  const AuthBlocStateAuthInitialising();
+  const AuthBlocStateAuthInitialising({required super.isLoading});
 }
 
 class AuthBlocStateUserNeedEmailVerify extends AuthBlocState {
-  const AuthBlocStateUserNeedEmailVerify();
+  const AuthBlocStateUserNeedEmailVerify({required super.isLoading});
 }
 
 class AuthBlocStateUserLoggedIn extends AuthBlocState {
   final AuthUser authUser;
-  const AuthBlocStateUserLoggedIn({required this.authUser});
+  const AuthBlocStateUserLoggedIn({
+    required this.authUser,
+    required super.isLoading,
+  });
 }
 
 class AuthBlocStateUserLoggedOut extends AuthBlocState {
   final Exception? exception;
-  final bool isLoading;
 
-  const AuthBlocStateUserLoggedOut({required this.isLoading, this.exception});
+  const AuthBlocStateUserLoggedOut(
+      {required super.isLoading, super.loadingContent = '', this.exception});
 }
 
 class AuthBlocStateUserRegistring extends AuthBlocState {
   final Exception? exception;
-  final bool isLoading;
 
   const AuthBlocStateUserRegistring({
+    required super.isLoading,
+    super.loadingContent = '',
     this.exception,
-    required this.isLoading,
+  });
+}
+
+class AuthBlocStateUserPasswordReset extends AuthBlocState {
+  final Exception? exception;
+  final bool isSuccess;
+
+  const AuthBlocStateUserPasswordReset({
+    required super.isLoading,
+    super.loadingContent = '',
+    this.exception,
+    this.isSuccess = false,
   });
 }

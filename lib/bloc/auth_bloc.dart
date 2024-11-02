@@ -6,7 +6,9 @@ import 'package:learn_dart/service/firestore/notes_firestore.dart';
 
 class AuthBloc extends Bloc<AuthBlocEvent, AuthBlocState> {
   AuthBloc(FirebaseAuthProvider provider)
-      : super(AuthBlocStateAuthInitialising()) {
+      : super(AuthBlocStateAuthInitialising(
+          isLoading: true,
+        )) {
     on<AuthBlocEventAuthInitialise>(
       (event, emit) async {
         await Future.sync(() => provider.initialize());
@@ -18,28 +20,39 @@ class AuthBloc extends Bloc<AuthBlocEvent, AuthBlocState> {
           ));
         } else if (!user.emailVerified) {
           provider.sendEmailVerificationLink();
-          emit(AuthBlocStateUserNeedEmailVerify());
+          emit(AuthBlocStateUserNeedEmailVerify(isLoading: false));
         } else {
-          emit(AuthBlocStateUserLoggedIn(authUser: user));
+          emit(AuthBlocStateUserLoggedIn(
+            authUser: user,
+            isLoading: false,
+          ));
         }
       },
     );
 
     on<AuthBlocEventUserLogin>(
       (event, emit) async {
-        emit(AuthBlocStateUserLoggedOut(isLoading: true));
+        emit(AuthBlocStateUserLoggedOut(
+            isLoading: true, loadingContent: "Logging You In..."));
         await Future.delayed(Duration(seconds: 1));
         final email = event.email;
         final password = event.password;
         try {
           final user =
               await provider.loginUser(email: email, password: password);
-          emit(AuthBlocStateUserLoggedOut(isLoading: false));
+          emit(AuthBlocStateUserLoggedOut(
+            isLoading: false,
+          ));
 
           if (!user.emailVerified) {
-            emit(AuthBlocStateUserNeedEmailVerify());
+            emit(AuthBlocStateUserNeedEmailVerify(
+              isLoading: false,
+            ));
           } else {
-            emit(AuthBlocStateUserLoggedIn(authUser: user));
+            emit(AuthBlocStateUserLoggedIn(
+              authUser: user,
+              isLoading: false,
+            ));
           }
         } on Exception catch (e) {
           emit(AuthBlocStateUserLoggedOut(
@@ -70,7 +83,7 @@ class AuthBloc extends Bloc<AuthBlocEvent, AuthBlocState> {
       (event, emit) async {
         try {
           provider.sendEmailVerificationLink();
-          emit(AuthBlocStateUserNeedEmailVerify());
+          emit(AuthBlocStateUserNeedEmailVerify(isLoading: false));
         } on Exception catch (e) {
           emit(AuthBlocStateUserLoggedOut(
             isLoading: false,
@@ -86,8 +99,7 @@ class AuthBloc extends Bloc<AuthBlocEvent, AuthBlocState> {
         final password = event.password;
         try {
           emit(AuthBlocStateUserRegistring(
-            isLoading: true,
-          ));
+              isLoading: true, loadingContent: "Registring You..."));
           await Future.delayed(Duration(seconds: 1));
 
           await provider.registerUser(email: email, password: password);
@@ -95,7 +107,9 @@ class AuthBloc extends Bloc<AuthBlocEvent, AuthBlocState> {
           emit(AuthBlocStateUserRegistring(
             isLoading: false,
           ));
-          emit(AuthBlocStateUserNeedEmailVerify());
+          emit(AuthBlocStateUserNeedEmailVerify(
+            isLoading: false,
+          ));
         } on Exception catch (e) {
           emit(AuthBlocStateUserRegistring(
             isLoading: false,
@@ -114,7 +128,40 @@ class AuthBloc extends Bloc<AuthBlocEvent, AuthBlocState> {
     });
 
     on<AuthBlocEventUserRegistering>((event, emit) async {
-      emit(AuthBlocStateUserRegistring(isLoading: false));
+      emit(AuthBlocStateUserRegistring(
+        isLoading: false,
+      ));
     });
+
+    on<AuthBlocEventOpenPasswordReset>(
+      (event, emit) {
+        emit(AuthBlocStateUserPasswordReset(
+          isLoading: false,
+        ));
+      },
+    );
+
+    on<AuthBlocEventSendPasswordReset>(
+      (event, emit) async {
+        emit(AuthBlocStateUserPasswordReset(
+          isLoading: true,
+          loadingContent: "Request Processing..",
+        ));
+
+        final email = event.email;
+        try {
+          await provider.sendPasswordResetLink(email);
+          emit(AuthBlocStateUserPasswordReset(
+            isLoading: false,
+            isSuccess: true,
+          ));
+        } on Exception catch (e) {
+          emit(AuthBlocStateUserPasswordReset(
+            isLoading: false,
+            exception: e,
+          ));
+        }
+      },
+    );
   }
 }

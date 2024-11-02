@@ -26,7 +26,7 @@ Future<T?> genericDialog<T>({
   );
 }
 
-Future<void> errorDialog({
+Future<void> showSingleActionDialog({
   required BuildContext context,
   required String title,
   required String content,
@@ -41,7 +41,7 @@ Future<void> errorDialog({
   );
 }
 
-Future<bool> yesNoDialog({
+Future<bool> showYesNoDialog({
   required BuildContext context,
   required String title,
   required String content,

@@ -28,7 +28,7 @@ class NotesListView extends StatelessWidget {
             onTap: () => onTap(notes[index]),
             trailing: IconButton(
               onPressed: () async {
-                final shouldDelete = await yesNoDialog(
+                final shouldDelete = await showYesNoDialog(
                   context: context,
                   title: "Delete Note",
                   content: "Do You want to delete the Note?",

@@ -101,4 +101,15 @@ class FirebaseAuthProvider implements NotesAuthProvider {
     }
     return user.delete();
   }
+
+  @override
+  Future<void> sendPasswordResetLink(String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw GenericAuthException(code: e.code);
+    } catch (e) {
+      throw GenericAuthException(code: "Unknown Error");
+    }
+  }
 }

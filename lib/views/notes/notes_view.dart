@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:learn_dart/bloc/auth_bloc.dart';
 import 'package:learn_dart/bloc/auth_bloc_event.dart';
 import 'package:learn_dart/constants/routes.dart';
-import 'package:learn_dart/service/firebase_auth_provider.dart';
+import 'package:learn_dart/service/auth_service.dart';
 import 'package:learn_dart/service/firestore/notes_firestore.dart';
 import 'package:learn_dart/util/alert_dialog.dart';
 import 'package:learn_dart/views/notes/notes_list_item.dart';
@@ -34,7 +34,8 @@ class _NotesLoadingViewState extends State<NotesLoadingView> {
 
 class NotesView extends StatefulWidget {
   final String title;
-  const NotesView({super.key, required this.title});
+  final AuthUser authUser;
+  const NotesView({super.key, required this.title, required this.authUser});
 
   @override
   State<NotesView> createState() => _NotesViewState();
@@ -42,14 +43,6 @@ class NotesView extends StatefulWidget {
 
 class _NotesViewState extends State<NotesView> {
   late final CloudStoreService _cloudStoreService;
-
-  String get userEmail {
-    return FirebaseAuthProvider.instance.getCurrentUser()!.email;
-  }
-
-  String get userId {
-    return FirebaseAuthProvider.instance.getCurrentUser()!.userId;
-  }
 
   @override
   void initState() {
@@ -71,7 +64,7 @@ class _NotesViewState extends State<NotesView> {
               PopupMenuButton<NotesMenuAction>(onSelected: (value) async {
                 switch (value) {
                   case NotesMenuAction.logOut:
-                    var res = await yesNoDialog(
+                    var res = await showYesNoDialog(
                       context: context,
                       title: "Logout Alert",
                       content: "Are you sure you want to Logout?",
@@ -80,7 +73,7 @@ class _NotesViewState extends State<NotesView> {
                       context.read<AuthBloc>().add(AuthBlocEventUserLogout());
                     }
                   case NotesMenuAction.deRegister:
-                    var res = await yesNoDialog(
+                    var res = await showYesNoDialog(
                       context: context,
                       title: "DeRegister Alert",
                       content: "Are you sure you want to DeRegister?",
@@ -89,10 +82,10 @@ class _NotesViewState extends State<NotesView> {
                       context.read<AuthBloc>().add(AuthBlocEventUserDelete());
                     }
                   case NotesMenuAction.profile:
-                    await errorDialog(
+                    await showSingleActionDialog(
                       context: context,
                       title: "Profile",
-                      content: userEmail,
+                      content: widget.authUser.email,
                     );
                 }
               }, itemBuilder: (context) {
@@ -118,7 +111,7 @@ class _NotesViewState extends State<NotesView> {
             switch (snapshot.connectionState) {
               case ConnectionState.done:
                 return StreamBuilder(
-                  stream: _cloudStoreService.userNotes(userId),
+                  stream: _cloudStoreService.userNotes(widget.authUser.userId),
                   builder: (context, snapshot) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.waiting:

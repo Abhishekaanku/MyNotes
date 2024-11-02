@@ -17,7 +17,6 @@ class RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<RegisterView> {
   late final TextEditingController _email;
   late final TextEditingController _password;
-  void Function()? _registerProgressInd;
 
   @override
   void initState() {
@@ -38,16 +37,6 @@ class _RegisterViewState extends State<RegisterView> {
     return BlocListener<AuthBloc, AuthBlocState>(
       listener: (context, state) async {
         if (state is AuthBlocStateUserRegistring) {
-          if (state.isLoading) {
-            final loginProgressInd =
-                showProgressDialog(context: context, content: "Registering..");
-            _registerProgressInd = loginProgressInd;
-          } else {
-            if (_registerProgressInd != null) {
-              _registerProgressInd!();
-            }
-            _registerProgressInd = null;
-          }
           if (state.exception != null) {
             late final String errorMsg;
             if (state.exception is GenericAuthException) {
@@ -57,7 +46,7 @@ class _RegisterViewState extends State<RegisterView> {
             } else {
               errorMsg = state.exception.toString();
             }
-            await errorDialog(
+            await showSingleActionDialog(
               context: context,
               title: "Register Error",
               content: errorMsg,
@@ -70,39 +59,44 @@ class _RegisterViewState extends State<RegisterView> {
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
             title: Text(widget.title),
           ),
-          body: Center(
-            child: Column(
-              children: [
-                TextField(
-                  decoration: const InputDecoration(hintText: "Enter Email"),
-                  keyboardType: TextInputType.emailAddress,
-                  controller: _email,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                ),
-                TextField(
-                  decoration: const InputDecoration(hintText: "Enter Password"),
-                  controller: _password,
-                  obscureText: true,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                ),
-                TextButton(
-                    onPressed: () async {
-                      final email = _email.text;
-                      final pass = _password.text;
-                      context.read<AuthBloc>().add(AuthBlocEventUserRegister(
-                            email: email,
-                            password: pass,
-                          ));
-                    },
-                    child: const Text("Register")),
-                TextButton(
-                    onPressed: () {
-                      context.read<AuthBloc>().add(AuthBlocEventUserLogout());
-                    },
-                    child: const Text("Already Registered? Login Here!"))
-              ],
+          body: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Center(
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: const InputDecoration(hintText: "Enter Email"),
+                    keyboardType: TextInputType.emailAddress,
+                    controller: _email,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    autofocus: true,
+                  ),
+                  TextField(
+                    decoration:
+                        const InputDecoration(hintText: "Enter Password"),
+                    controller: _password,
+                    obscureText: true,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                  ),
+                  TextButton(
+                      onPressed: () async {
+                        final email = _email.text;
+                        final pass = _password.text;
+                        context.read<AuthBloc>().add(AuthBlocEventUserRegister(
+                              email: email,
+                              password: pass,
+                            ));
+                      },
+                      child: const Text("Register")),
+                  TextButton(
+                      onPressed: () {
+                        context.read<AuthBloc>().add(AuthBlocEventUserLogout());
+                      },
+                      child: const Text("Already Registered? Login Here!"))
+                ],
+              ),
             ),
           )),
     );

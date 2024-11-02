@@ -21,6 +21,8 @@ abstract class NotesAuthProvider {
   void signOut();
 
   void deleteCurUser();
+
+  void sendPasswordResetLink(String email);
 }
 
 @immutable
