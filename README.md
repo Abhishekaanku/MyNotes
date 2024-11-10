@@ -1,4 +1,4 @@
-# learn_dart
+# My Notes
 
 A new Flutter project.
 
